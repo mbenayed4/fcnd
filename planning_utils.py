@@ -24,6 +24,7 @@ def create_grid(data, drone_altitude, safety_distance):
     east_size = int(np.ceil(east_max - east_min))
 
     # Initialize an empty grid
+    print("UTILS:CREATEGRID NorthSize/EastSize = ", north_size, east_size)
     grid = np.zeros((north_size, east_size))
 
     # Populate the grid with obstacles
@@ -51,10 +52,15 @@ class Action(Enum):
     is the cost of performing the action.
     """
 
-    WEST = (0, -1, 1)
-    EAST = (0, 1, 1)
     NORTH = (-1, 0, 1)
     SOUTH = (1, 0, 1)
+    EAST = (0, 1, 1)
+    WEST = (0, -1, 1)
+    
+    NORTHE = (-1, 1, 1)
+    NORTHW = (-1, -1, 1)
+    SOUTHE = (1, 1, 1)
+    SOUTHW = (1, -1, 1)
 
     @property
     def cost(self):
@@ -75,21 +81,26 @@ def valid_actions(grid, current_node):
 
     # check if the node is off the grid or
     # it's an obstacle
+    print("UTILS:VALID_ACTIONS: x y n m: ", x, y, n, m)
 
     if x - 1 < 0 or grid[x - 1, y] == 1:
+        print("VALACT X Y Off Grid or Obstable North")
         valid_actions.remove(Action.NORTH)
     if x + 1 > n or grid[x + 1, y] == 1:
+        print("VALACT X Y Off Grid or Obstable South")
         valid_actions.remove(Action.SOUTH)
     if y - 1 < 0 or grid[x, y - 1] == 1:
+        print("VALACT X Y Off Grid or Obstable West")
         valid_actions.remove(Action.WEST)
     if y + 1 > m or grid[x, y + 1] == 1:
+        print("VALACT X Y Off Grid or Obstable East")
         valid_actions.remove(Action.EAST)
 
     return valid_actions
 
 
 def a_star(grid, h, start, goal):
-
+    print("UTILS A_STAR")
     path = []
     path_cost = 0
     queue = PriorityQueue()
@@ -108,7 +119,6 @@ def a_star(grid, h, start, goal):
             current_cost = branch[current_node][0]
             
         if current_node == goal:        
-            print('Found a path.')
             found = True
             break
         else:
@@ -139,8 +149,33 @@ def a_star(grid, h, start, goal):
         print('**********************') 
     return path[::-1], path_cost
 
-
-
 def heuristic(position, goal_position):
-    return np.linalg.norm(np.array(position) - np.array(goal_position))
+    x = np.abs(position[0] - goal_position[0])
+    y = np.abs(position[1] - goal_position[1])
+    cost = np.sqrt(x**2 + y**2)
+    cost1 = np.linalg.norm(np.array(position) - np.array(goal_position))
+    print ("cost1, cost2 ", cost, cost1)
+    return cost
+
+def collinearity_2D(p1, p2, p3):
+    collinear = False
+    det = p1[0]*(p2[1] - p3[1]) + p2[0]*(p3[1] - p1[1]) + p3[0]*(p1[1] - p2[1])
+    if det == 0 :
+        collinear = True
+    print("UTILS collinear= ", collinear)
+    return collinear
+
+def prune_path(path):
+    print("UTILS:prune_path")
+    pruned_path = [p for p in path]
+    i = 0
+    while i < len(pruned_path) - 2:
+        p1 = pruned_path[i]
+        p2 = pruned_path[i+1]
+        p3 = pruned_path[i+2]
+        if collinearity_2D(p1, p2, p3):
+            pruned_path.remove(pruned_path[i+1])
+        else:
+            i += 1
+    return pruned_path
 
