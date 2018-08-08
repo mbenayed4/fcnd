@@ -57,10 +57,10 @@ class Action(Enum):
     EAST = (0, 1, 1)
     WEST = (0, -1, 1)
     
-    NORTHE = (-1, 1, 1)
-    NORTHW = (-1, -1, 1)
-    SOUTHE = (1, 1, 1)
-    SOUTHW = (1, -1, 1)
+    NORTHE = (-1, 1, np.sqrt(2)) 
+    NORTHW = (-1, -1, np.sqrt(2))
+    SOUTHE = (1, 1, np.sqrt(2))
+    SOUTHW = (1, -1, np.sqrt(2))
 
     @property
     def cost(self):
